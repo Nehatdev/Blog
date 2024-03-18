@@ -1,31 +1,53 @@
-import React from 'react'
+import React, { useState } from 'react';
 import './App.css'
-import {FaUser,FaLock} from 'react-icons/fa'
-export const Login = () => {
-  return (
-    <div className='wrapper'>
-      <form action=''>
-        <h1>Login</h1>
-        <div className='input-box'>
-          <input type='text'placeholder='Username' required/>
-          <FaUser className='icon'/>
-        </div>
-        <div className='input-box'>
-          <input type='password'placeholder='password'required/>
-          <FaLock className='icon'/>
-        </div>
-        <div className='forgot'>
-          <label><input type='checkbox'/>Remember me</label>
-          <a href='#'>Forgot Password</a>
-        </div>
-        <button type='submit'>Login</button>
-        <div className='register'>
-          <p>Don't have an account<a href='#'>Register</a></p>
-        </div>
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
+import { useNavigate, NavLink } from "react-router-dom";
+import { FaUser, FaLock } from 'react-icons/fa'
+import axios from 'axios';
 
-      </form>
-        
-        
-    </div>
-  )
-}
+export const Login = () => {
+  const [data, setData] = useState({
+    email: '',
+    password: ''
+  });
+  const navigate = useNavigate();
+
+  const handleChange = (event) => {
+    setData({ ...data, [event.target.name]: event.target.value });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/login', data);
+      const token = response.data.token;
+      localStorage.setItem('token', token);
+      localStorage.setItem('id', response.data.user._id);
+      if (response) {
+        toast.success('Login success');
+        navigate('/post');
+      } else {
+        toast.error('Login failed: Invalid credentials');
+      }
+    } catch (error) {
+      toast.error('Login failed: Network error');
+    }
+  };
+
+  return (
+    <>
+      <div>
+        <form onSubmit={handleSubmit} className='login'>
+          <input type="text" onChange={handleChange} value={data.email} name="email" placeholder='Email' />
+          <FaUser className='icon' />
+          <input type="password" onChange={handleChange} value={data.password} name="password" placeholder='Password' />
+          <FaLock className='icon' />
+          <input type="submit" className='button' name="login" value="Login" />
+          <NavLink to="/signup">Not yet registered? Register Now</NavLink>
+        </form>
+      </div>
+      <ToastContainer />
+    </>
+  );
+};
